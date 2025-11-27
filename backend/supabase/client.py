@@ -1,4 +1,3 @@
-
 from supabase import create_client
 import os
 
@@ -10,11 +9,10 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 def get_accounts():
     return supabase.table("accounts").select("*").execute().data
 
-def add_account(username, password, tag="demo"):
+def add_account(email, password):
     return supabase.table("accounts").insert({
-        "username": username,
-        "password": password,
-        "tag": tag
+        "email": email,
+        "password": password
     }).execute()
 
 def delete_account(id):

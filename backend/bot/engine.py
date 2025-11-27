@@ -13,9 +13,9 @@ def run_bot(account):
             log("Opening site...")
             page.goto("https://example.com/login")
 
-            update_action("Entering username")
-            log("Typing username")
-            page.fill("#username", account["username"])
+            update_action("Entering email")
+            log("Typing email")
+            page.fill("#email", account["email"])
 
             update_action("Entering password")
             log("Typing password")

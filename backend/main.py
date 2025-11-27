@@ -49,7 +49,7 @@ def accounts():
 
 @app.post("/accounts/add")
 def add(acc: dict):
-    return add_account(acc["username"], acc["password"], acc.get("tag", "demo"))
+    return add_account(acc["email"], acc["password"])
 
 @app.delete("/accounts/{id}")
 def remove(id: str):
