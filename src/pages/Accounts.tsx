@@ -74,8 +74,8 @@ export default function Accounts() {
 
       {/* Glass Add Modal */}
       {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center fade-in-soft">
-          <div className="glass-panel p-8 w-96 rounded-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center fade-in-soft z-[999]">
+          <div className="glass-panel p-8 w-96 rounded-2xl z-[1000]">
             <h2 className="text-xl font-semibold mb-4">Add New Account</h2>
 
             <input
