@@ -1,0 +1,22 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0a;
+  --card: rgba(255,255,255,0.08);
+  --accent: #00eaff;
+}
+
+.theme-cyan { --accent: #00eaff; }
+.theme-purple { --accent: #c800ff; }
+.theme-red { --accent: #ff0040; }
+.theme-green { --accent: #00ff95; }
+.theme-gold { --accent: #ffb800; }
+
+body { background: var(--bg); color:white; font-family: sans-serif; }
+
+.glass { background: var(--card); backdrop-filter: blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:20px; transition:0.3s;}
+.btn { padding:10px 18px; border-radius:10px; background:var(--accent); color:black; font-weight:600; transition:0.2s;}
+.btn:hover { opacity:0.8; }
