@@ -1,6 +1,5 @@
-
 {
-  "name": "bot-dashboard",
+  "name": "insta-bot-dashboard",
   "version": "1.0.0",
   "private": true,
   "scripts": {

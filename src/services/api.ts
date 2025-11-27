@@ -1,22 +1,34 @@
-
 const BASE = "https://insta-bot-dvds.onrender.com";
 
-export async function getStatus(){
-  return fetch(BASE + "/bot/status").then(r=>r.json());
+async function safeJson(res: Response) {
+  try {
+    return await res.json();
+  } catch {
+    return {};
+  }
 }
 
-export async function startBot(){
-  return fetch(BASE + "/bot/start",{method:"POST"}).then(r=>r.json());
+export async function getStatus() {
+  const res = await fetch(BASE + "/bot/status");
+  return safeJson(res);
 }
 
-export async function stopBot(){
-  return fetch(BASE + "/bot/stop",{method:"POST"}).then(r=>r.json());
+export async function startBot() {
+  const res = await fetch(BASE + "/bot/start", { method: "POST" });
+  return safeJson(res);
 }
 
-export async function getLogs(){
-  return fetch(BASE + "/logs").then(r=>r.json());
+export async function stopBot() {
+  const res = await fetch(BASE + "/bot/stop", { method: "POST" });
+  return safeJson(res);
 }
 
-export async function getAccounts(){
-  return fetch(BASE + "/accounts").then(r=>r.json());
+export async function getLogs() {
+  const res = await fetch(BASE + "/logs");
+  return safeJson(res);
+}
+
+export async function getAccounts() {
+  const res = await fetch(BASE + "/accounts");
+  return safeJson(res);
 }

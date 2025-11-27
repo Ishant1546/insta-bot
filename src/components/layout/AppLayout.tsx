@@ -1,15 +1,15 @@
-
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import type { ReactNode } from "react";
 
-export default function AppLayout({ children }) {
+export default function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex">
+    <div className="min-h-screen flex">
       <Sidebar />
-      <div className="ml-60 w-full p-6">
+      <main className="ml-60 flex-1 px-7 py-6">
         <Navbar />
         {children}
-      </div>
+      </main>
     </div>
   );
 }
