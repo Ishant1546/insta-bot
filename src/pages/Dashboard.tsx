@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
+import Toast from "../components/ui/Toast";
 
 interface BotStatus {
   status: string;
@@ -17,11 +18,16 @@ export default function Dashboard() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState("");
+
+  function showToast(t: string) {
+    setToast(t);
+  }
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const res = await api.status();
-      setSt(res);
+      const s = await api.status();
+      setSt(s);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -29,21 +35,26 @@ export default function Dashboard() {
 
   async function startBot() {
     setLoading(true);
-    await api.start();
+    const res = await api.start();
     setLoading(false);
+
+    if (res.success) showToast("Bot started successfully!");
+    else showToast("Bot failed to start.");
   }
 
   async function stopBot() {
     setLoading(true);
     await api.stop();
     setLoading(false);
+    showToast("Bot stopped.");
   }
 
   return (
-    <div className="fade-in-soft">
+    <div className="fade-in-soft relative z-0">
+      <Toast msg={toast} clear={() => setToast("")} />
+
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
-      {/* GRID */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {/* STATUS CARD */}
@@ -63,18 +74,16 @@ export default function Dashboard() {
           </div>
 
           <div className="text-muted mt-3 text-sm">{st.action}</div>
-
           <div className="mt-4 text-sm">
             <span className="text-muted">Uptime:</span> {st.uptime}
           </div>
         </div>
 
-        {/* START CARD */}
+        {/* CONTROLS */}
         <div className="glass-panel p-6 rounded-xl">
           <h2 className="text-xl font-semibold mb-4">Controls</h2>
 
           <div className="flex flex-col gap-4">
-
             <button
               onClick={startBot}
               disabled={loading}
