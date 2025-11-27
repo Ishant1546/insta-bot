@@ -1,115 +1,119 @@
 import { useEffect, useState } from "react";
-import { getStatus, startBot, stopBot } from "../services/api";
-import StatusCard from "../components/cards/StatusCard";
+import { api } from "../services/api";
 
-type Status = {
-  status?: string;
-  uptime?: string;
-  action?: string;
-};
+interface BotStatus {
+  status: string;
+  action: string;
+  uptime: string;
+  last_success: boolean | null;
+}
 
 export default function Dashboard() {
-  const [status, setStatus] = useState<Status>({});
-  const [starting, setStarting] = useState(false);
+  const [st, setSt] = useState<BotStatus>({
+    status: "idle",
+    action: "waiting",
+    uptime: "0s",
+    last_success: null,
+  });
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    const fetchStatus = async () => {
-      const data = await getStatus();
-      if (mounted) setStatus(data);
-    };
-    fetchStatus();
-    const id = setInterval(fetchStatus, 1200);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
+    const interval = setInterval(async () => {
+      const res = await api.status();
+      setSt(res);
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  async function handleStart() {
-    setStarting(true);
-    await startBot();
-    setStarting(false);
+  async function startBot() {
+    setLoading(true);
+    await api.start();
+    setLoading(false);
   }
 
-  async function handleStop() {
-    await stopBot();
+  async function stopBot() {
+    setLoading(true);
+    await api.stop();
+    setLoading(false);
   }
-
-  const prettyStatus = status.status ?? "offline";
-  const prettyUptime = status.uptime ?? "0s";
-  const prettyAction = status.action ?? "idle";
 
   return (
-    <div className="space-y-6 fade-in-soft">
-      <section className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold mb-1">Live Bot Overview</h2>
-          <p className="text-muted">
-            Monitor uptime, current action and quickly start or stop your private bot.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            className="btn-primary"
-            onClick={handleStart}
-            disabled={starting}
+    <div className="fade-in-soft">
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+
+      {/* GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {/* STATUS CARD */}
+        <div className="glass-panel p-6 rounded-xl">
+          <h2 className="text-xl font-semibold mb-3">Bot Status</h2>
+
+          <div
+            className={`status-pill w-fit ${
+              st.status === "running"
+                ? "bg-green-500/30 border-green-400/50 text-green-200"
+                : st.status === "starting"
+                ? "bg-yellow-500/30 border-yellow-400/50 text-yellow-200"
+                : "bg-slate-600/30 border-slate-500/50 text-slate-300"
+            }`}
           >
-            {starting ? "Starting…" : "Start Bot"}
-          </button>
-          <button className="btn-ghost" onClick={handleStop}>
-            Stop
-          </button>
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatusCard
-          title="Bot Status"
-          value={prettyStatus.toUpperCase()}
-          hint="Online status synced from backend"
-        />
-        <StatusCard
-          title="Uptime"
-          value={prettyUptime}
-          hint="Time since last start"
-        />
-        <StatusCard
-          title="Current Action"
-          value={prettyAction || "Idle"}
-          hint="Backend-reported current step"
-        />
-      </section>
-
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="glass-soft p-4 rounded-2xl">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-slate-100">
-              Quick Insights
-            </h3>
-            <span className="text-[0.7rem] text-muted">Realtime</span>
+            ● {st.status}
           </div>
-          <p className="text-[0.85rem] text-muted leading-relaxed">
-            This dashboard is wired directly to your Render backend. Actions taken here call{" "}
-            <span className="text-[var(--accent-strong)]">/bot/start</span>,{" "}
-            <span className="text-[var(--accent-strong)]">/bot/stop</span> and{" "}
-            <span className="text-[var(--accent-strong)]">/bot/status</span> to keep everything in sync.
-          </p>
+
+          <div className="text-muted mt-3 text-sm">{st.action}</div>
+
+          <div className="mt-4 text-sm">
+            <span className="text-muted">Uptime:</span> {st.uptime}
+          </div>
         </div>
 
-        <div className="glass-soft p-4 rounded-2xl">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-slate-100">
-              Activity Snapshot
-            </h3>
-            <span className="text-[0.7rem] text-muted">Soft animation</span>
+        {/* START CARD */}
+        <div className="glass-panel p-6 rounded-xl">
+          <h2 className="text-xl font-semibold mb-4">Controls</h2>
+
+          <div className="flex flex-col gap-4">
+
+            <button
+              onClick={startBot}
+              disabled={loading}
+              className="btn-primary flex items-center justify-center gap-2"
+            >
+              🚀 Start Bot
+            </button>
+
+            <button
+              onClick={stopBot}
+              disabled={loading}
+              className="btn-ghost flex items-center justify-center gap-2"
+            >
+              🛑 Stop Bot
+            </button>
           </div>
-          <p className="text-[0.85rem] text-muted leading-relaxed">
-            Use the Logs and Accounts sections from the sidebar to inspect detailed actions and manage
-            stored credentials in Supabase.
-          </p>
         </div>
-      </section>
+
+        {/* LAST RESULT */}
+        <div className="glass-panel p-6 rounded-xl">
+          <h2 className="text-xl font-semibold mb-4">Last Run Result</h2>
+
+          {st.last_success === null && (
+            <div className="text-muted">No runs yet</div>
+          )}
+
+          {st.last_success === true && (
+            <div className="status-pill bg-green-500/30 border-green-400/50 text-green-200">
+              ✓ Success
+            </div>
+          )}
+
+          {st.last_success === false && (
+            <div className="status-pill bg-red-500/30 border-red-400/50 text-red-200">
+              ✗ Failed
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

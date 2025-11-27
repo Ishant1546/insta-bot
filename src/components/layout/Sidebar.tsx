@@ -1,68 +1,62 @@
 import { NavLink } from "react-router-dom";
+import { useState } from "react";
 
-const navItems = [
-  { to: "/", label: "Dashboard" },
-  { to: "/logs", label: "Logs" },
-  { to: "/accounts", label: "Accounts" },
-  { to: "/settings", label: "Settings" },
+interface NavData {
+  isActive: boolean;
+}
+
+const links = [
+  { name: "Dashboard", path: "/", icon: "📊" },
+  { name: "Logs", path: "/logs", icon: "📜" },
+  { name: "Accounts", path: "/accounts", icon: "👤" },
+  { name: "Settings", path: "/settings", icon: "⚙️" },
 ];
 
 export default function Sidebar() {
+  const [open, setOpen] = useState(true);
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-60 px-4 py-5">
-      <div className="glass-panel h-full flex flex-col justify-between fade-in-soft">
-        <div className="space-y-6 px-2 pt-2">
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-slate-50/80 to-slate-300/80 flex items-center justify-center shadow-lg shadow-slate-900/60">
-              <span className="text-xs font-bold text-slate-900">IB</span>
-            </div>
-            <div>
-              <div className="text-sm font-semibold tracking-wide">
-                InstaBot Control
-              </div>
-              <div className="text-[0.7rem] text-muted">
-                Private automation console
-              </div>
-            </div>
-          </div>
-
-          <nav className="space-y-1 text-sm">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end
-                className={({ isActive }) =>
-                  [
-                    "flex items-center justify-between rounded-xl px-3 py-2 transition-all",
-                    "border border-transparent bg-transparent",
-                    "hover:bg-slate-900/70 hover:border-slate-700/80",
-                    isActive
-                      ? "bg-slate-900/80 border-[var(--accent-soft)] text-[var(--accent-strong)] shadow-[0_8px_24px_rgba(15,23,42,0.9)]"
-                      : "text-slate-200/90",
-                  ].join(" ")
-                }
-              >
-                <span>{item.label}</span>
-                <span className="h-1 w-1 rounded-full bg-[var(--accent-soft)]" />
-              </NavLink>
-            ))}
-          </nav>
+    <div
+      className={`glass-panel h-screen transition-all duration-300
+      ${open ? "w-64" : "w-20"} flex flex-col`}
+    >
+      <div className="flex items-center justify-between px-4 py-5 border-b border-slate-700/40">
+        <div className="flex items-center gap-2">
+          <div className="text-3xl">🤖</div>
+          {open && <div className="text-lg font-semibold">Luxury Bot</div>}
         </div>
 
-        <div className="border-t border-slate-700/50 px-4 py-3 text-[0.75rem] text-muted">
-          <div className="flex items-center justify-between">
-            <span>Backend</span>
-            <span className="status-pill">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(74,222,128,0.9)]" />
-              Live
-            </span>
-          </div>
-          <div className="mt-1 truncate text-[0.7rem] opacity-80">
-            https://insta-bot-dvds.onrender.com
-          </div>
-        </div>
+        <button
+          onClick={() => setOpen(!open)}
+          className="text-slate-400 hover:text-white text-xl"
+        >
+          {open ? "⟨" : "⟩"}
+        </button>
       </div>
-    </aside>
+
+      <div className="flex flex-col mt-3">
+        {links.map((l) => (
+          <NavLink
+            key={l.path}
+            to={l.path}
+            end
+            className={({ isActive }: NavData) =>
+              `
+              flex items-center gap-3 px-5 py-3 my-1 rounded-lg 
+              transition-all duration-200 cursor-pointer
+              ${
+                isActive
+                  ? "bg-[var(--lux-accent-soft)] text-[var(--lux-accent-strong)] shadow"
+                  : "text-slate-300 hover:bg-slate-700/40"
+              }
+              `
+            }
+          >
+            <span className="text-xl">{l.icon}</span>
+            {open && <span className="font-medium">{l.name}</span>}
+          </NavLink>
+        ))}
+      </div>
+    </div>
   );
 }

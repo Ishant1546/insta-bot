@@ -1,34 +1,55 @@
-const BASE = "https://insta-bot-dvds.onrender.com";
-
-async function safeJson(res: Response) {
-  try {
-    return await res.json();
-  } catch {
-    return {};
-  }
+export interface AddAccountPayload {
+  email: string;
+  password: string;
 }
 
-export async function getStatus() {
-  const res = await fetch(BASE + "/bot/status");
-  return safeJson(res);
-}
+const BASE_URL = "https://insta-bot-dvds.onrender.com";
 
-export async function startBot() {
-  const res = await fetch(BASE + "/bot/start", { method: "POST" });
-  return safeJson(res);
-}
+export const api = {
+  status: async () => {
+    const r = await fetch(`${BASE_URL}/bot/status`);
+    return r.json();
+  },
 
-export async function stopBot() {
-  const res = await fetch(BASE + "/bot/stop", { method: "POST" });
-  return safeJson(res);
-}
+  start: async () => {
+    const r = await fetch(`${BASE_URL}/bot/start`, {
+      method: "POST",
+    });
+    return r.json();
+  },
 
-export async function getLogs() {
-  const res = await fetch(BASE + "/logs");
-  return safeJson(res);
-}
+  stop: async () => {
+    const r = await fetch(`${BASE_URL}/bot/stop`, {
+      method: "POST",
+    });
+    return r.json();
+  },
 
-export async function getAccounts() {
-  const res = await fetch(BASE + "/accounts");
-  return safeJson(res);
-}
+  logs: async () => {
+    const r = await fetch(`${BASE_URL}/logs`);
+    return r.json();
+  },
+
+  accounts: async () => {
+    const r = await fetch(`${BASE_URL}/accounts`);
+    return r.json();
+  },
+
+  addAccount: async (data: AddAccountPayload) => {
+    const r = await fetch(`${BASE_URL}/accounts/add`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return r.json();
+  },
+
+  deleteAccount: async (id: string) => {
+    const r = await fetch(`${BASE_URL}/accounts/${id}`, {
+      method: "DELETE",
+    });
+    return r.json();
+  },
+};

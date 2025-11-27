@@ -1,15 +1,18 @@
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
-import type { ReactNode } from "react";
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex">
+    <div className="flex fade-in-soft">
       <Sidebar />
-      <main className="ml-60 flex-1 px-7 py-6">
+
+      <div className="flex-1 flex flex-col">
         <Navbar />
-        {children}
-      </main>
+
+        <div className="p-6 fade-in-soft">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,47 +1,57 @@
-import { useEffect, useState } from "react";
-import { getLogs } from "../services/api";
+import { useEffect, useRef, useState } from "react";
+import { api } from "../services/api";
 
 export default function Logs() {
   const [logs, setLogs] = useState<string[]>([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
+  // Auto-scroll function
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  };
+
+  // Poll logs every second
   useEffect(() => {
-    let mounted = true;
-    const fetchLogs = async () => {
-      const data = await getLogs();
-      if (mounted && Array.isArray(data.logs)) {
-        setLogs(data.logs);
+    const interval = setInterval(async () => {
+      const res = await api.logs();
+      const updated = res?.logs ?? [];
+
+      // Only auto-scroll if new logs came
+      if (updated.length !== logs.length) {
+        setLogs(updated);
+        setTimeout(scrollToBottom, 100);
       }
-    };
-    fetchLogs();
-    const id = setInterval(fetchLogs, 1300);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
-  }, []);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [logs]);
 
   return (
-    <div className="space-y-4 fade-in-soft">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold mb-1">Live Log Stream</h2>
-          <p className="text-muted">
-            Every key action the bot takes is surfaced here in a scrollable console-style feed.
-          </p>
-        </div>
-      </div>
+    <div className="fade-in-soft">
+      <h1 className="text-3xl font-bold mb-6">Bot Logs</h1>
 
-      <div className="glass-scroll text-[0.8rem] leading-relaxed">
+      {/* Glass scroll container */}
+      <div
+        ref={scrollRef}
+        className="glass-scroll mt-4 rounded-xl border border-slate-700/40"
+        style={{ height: "480px" }}
+      >
         {logs.length === 0 && (
-          <div className="text-muted">No logs yet. Start the bot to see activity.</div>
+          <div className="text-muted text-center mt-10">No logs yet…</div>
         )}
-        {logs.map((line, idx) => (
+
+        {logs.map((line, i) => (
           <div
-            key={idx}
-            className="border-b border-slate-700/40 last:border-none py-1.5 flex gap-2"
+            key={i}
+            className="flex items-start gap-3 py-2 fade-in-soft"
           >
-            <span className="mt-1 h-1 w-1 rounded-full bg-[var(--accent-soft)]" />
-            <span className="whitespace-pre-wrap">{line}</span>
+            <div className="w-2 h-2 rounded-full bg-[var(--lux-accent)] mt-2 shadow-lg" />
+
+            <div className="text-sm leading-relaxed">
+              {line}
+            </div>
           </div>
         ))}
       </div>

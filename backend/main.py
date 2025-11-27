@@ -2,8 +2,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from bot.engine import run_bot
-from bot.status import start, stop, get_status, update_action
-from bot.logger import log, get_logs
+from bot.status import start, stop, get_status, update_action, finish
+from bot.logger import log, get_logs, clear_logs
 from supabase.client import get_accounts, add_account, delete_account
 
 app = FastAPI()
@@ -15,42 +15,59 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.get("/bot/status")
-def status():
-    return get_status()
+@app.get("/")
+def home():
+    return {"message": "Backend running"}
 
 @app.post("/bot/start")
-def start_bot():
-    start()
+async def bot_start():
+    clear_logs()
     accounts = get_accounts()
-    if len(accounts) == 0:
-        stop()
-        return {"error": "No accounts in database"}
+    if not accounts:
+        log("ERROR: No accounts stored in Supabase")
+        return {"success": False, "error": "No accounts stored"}
 
-    update_action("Loading account")
-    acc = accounts[0]
+    acc = accounts[0]  
+    start()
+    update_action("Launching bot")
+    log("Starting bot using: " + acc["email"])
 
     success = run_bot(acc)
-    stop()
+
+    finish(success)
     return {"success": success}
 
 @app.post("/bot/stop")
-def stop_bot():
+async def bot_stop():
     stop()
-    return {"message": "Stopped"}
+    log("Bot manually stopped")
+    return {"success": True}
+
+@app.get("/bot/status")
+async def bot_status():
+    return get_status()
 
 @app.get("/logs")
-def logs():
+async def logs():
     return {"logs": get_logs()}
 
 @app.get("/accounts")
-def accounts():
+async def accounts():
     return {"accounts": get_accounts()}
 
 @app.post("/accounts/add")
-def add(acc: dict):
-    return add_account(acc["email"], acc["password"])
+async def accounts_add(body: dict):
+    email = body.get("email")
+    password = body.get("password")
+    if not email or not password:
+        return {"success": False, "error": "Email + password required"}
+
+    add_account(email, password)
+    log(f"Added account: {email}")
+    return {"success": True, "accounts": get_accounts()}
 
 @app.delete("/accounts/{id}")
-def remove(id: str):
-    return delete_account(id)
+async def accounts_delete(id: str):
+    delete_account(id)
+    log(f"Deleted account: {id}")
+    return {"success": True, "accounts": get_accounts()}

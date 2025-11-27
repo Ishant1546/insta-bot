@@ -1,47 +1,58 @@
 
 from playwright.sync_api import sync_playwright
-from .status import update_action
-from .logger import log
+from bot.status import update_action
+from bot.logger import log
 
 def run_bot(account):
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(
-    headless=True,
-    args=[
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--disable-software-rasterizer",
-        "--disable-extensions",
-        "--disable-background-networking"
-    ]
-)
-        page = browser.new_page()
+    browser = None
+    try:
+        with sync_playwright() as pw:
+            update_action("Launching Chromium")
+            log("Launching Chromium browser")
 
-        try:
-            update_action("Opening website")
-            log("Opening site...")
-            page.goto("https://example.com/login")
+            browser = pw.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-gpu",
+                    "--disable-dev-shm-usage",
+                    "--disable-setuid-sandbox"
+                ]
+            )
 
-            update_action("Entering email")
+            page = browser.new_page()
+
+            login_url = "https://example.com/login"  
+            update_action("Opening login page")
+            log("Navigating to login page...")
+            page.goto(login_url)
+
+            update_action("Typing email")
             log("Typing email")
-            page.fill("#email", account["email"])
+            page.fill("input[name=email]", account["email"])
 
-            update_action("Entering password")
+            update_action("Typing password")
             log("Typing password")
-            page.fill("#password", account["password"])
+            page.fill("input[name=password]", account["password"])
 
             update_action("Clicking login")
-            log("Click login button")
-            page.click("#login")
+            log("Submitting login form")
+            page.click("button[type=submit]")
 
-            update_action("Checking success")
-            page.wait_for_selector("#dashboard", timeout=5000)
+            update_action("Waiting for dashboard")
+            log("Waiting for dashboard selector")
+            page.wait_for_selector("#dashboard", timeout=7000)
+
+            update_action("Login success")
             log("Login success")
+
             browser.close()
             return True
-        except Exception as e:
-            log(f"Error: {e}")
-            browser.close()
-            return False
+
+    except Exception as e:
+        update_action("Error occurred")
+        log("ERROR: " + str(e))
+        if browser:
+            try: browser.close()
+            except: pass
+        return False
