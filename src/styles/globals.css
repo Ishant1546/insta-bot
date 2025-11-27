@@ -1,0 +1,8 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-[#0a0a0a] text-white; font-family: sans-serif; }
+
+.glass { @apply bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl; }
