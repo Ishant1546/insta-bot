@@ -35,7 +35,7 @@ export default function App() {
         console.error("Backend offline");
       }
     };
-    const interval = setInterval(fetchStatus, 1000);
+    const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -174,19 +174,39 @@ function AccountsView() {
   const [form, setForm] = useState({ email: '', password: '' });
 
   const fetchAccounts = async () => {
-    const res = await axios.get(`${API_URL}/accounts`);
-    setAccounts(res.data);
+    try {
+        const res = await axios.get(`${API_URL}/accounts`);
+        setAccounts(res.data);
+    } catch (e) {
+        toast.error("Failed to fetch accounts from DB.");
+    }
   };
 
-  useEffect(() => { fetchAccounts(); }, []);
+  // FIX: Fetch accounts ONCE when the component loads (when the tab is active)
+  useEffect(() => { 
+      fetchAccounts(); 
+  }, []); // Empty dependency array means run once on mount
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if(!form.email || !form.password) return toast.error("Missing fields");
-    await axios.post(`${API_URL}/accounts/add`, form);
-    toast.success("Account Encrypted & Stored");
-    setForm({ email: '', password: '' });
-    fetchAccounts();
+    if(!form.email || !form.password) {
+        return toast.error("Email and password fields are required.");
+    }
+
+    try {
+        // FIX: Ensure API response handles errors and success correctly
+        await axios.post(`${API_URL}/accounts/add`, form);
+        toast.success("Account Encrypted & Stored.");
+        setForm({ email: '', password: '' });
+        fetchAccounts(); // Refresh the list
+    } catch (error) {
+        // IMPROVEMENT: Handle specific API errors
+        if (error.response && error.response.data && error.response.data.detail) {
+             toast.error(`Add Error: ${error.response.data.detail}`);
+        } else {
+             toast.error("Failed to add account. Check backend console.");
+        }
+    }
   };
 
   const handleDelete = async (id) => {
