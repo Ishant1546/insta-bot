@@ -1,11 +1,14 @@
 from datetime import datetime
 from playwright.sync_api import sync_playwright
+import os
 
 # --- CONFIGURATION & GLOBAL STATE ---
 
 GLOBAL_LOGS = []
 MAX_LOGS = 50
 LAST_STATUS = {"status": "Action Ready", "action": "Click 'Run Action' to test bot."}
+
+os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/opt/render/.cache/ms-playwright'
 
 # --- LOGGING FUNCTION ---
 
