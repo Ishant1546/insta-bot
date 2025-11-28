@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-playwright
 supabase
 pydantic
 python-multipart
+playwright
