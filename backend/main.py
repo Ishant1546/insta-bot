@@ -1,73 +1,74 @@
-
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from bot.engine import run_bot
-from bot.status import start, stop, get_status, update_action, finish
-from bot.logger import log, get_logs, clear_logs
-from supabase.client import get_accounts, add_account, delete_account
+from pydantic import BaseModel
+from supabase import create_client, Client
+import os
+from bot_engine import bot
+
+# Supabase Config
+url: str = os.environ.get("SUPABASE_URL")
+key: str = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
 
 app = FastAPI()
 
+# CORS: Allow Netlify frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # Change to your Netlify URL in production
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
+# Models
+class Account(BaseModel):
+    email: str
+    password: str
+
 @app.get("/")
-def home():
-    return {"message": "Backend running"}
-
-@app.post("/bot/start")
-async def bot_start():
-    clear_logs()
-    accounts = get_accounts()
-    if not accounts:
-        log("ERROR: No accounts stored in Supabase")
-        return {"success": False, "error": "No accounts stored"}
-
-    acc = accounts[0]  
-    start()
-    update_action("Launching bot")
-    log("Starting bot using: " + acc["email"])
-
-    success = run_bot(acc)
-
-    finish(success)
-    return {"success": success}
-
-@app.post("/bot/stop")
-async def bot_stop():
-    stop()
-    log("Bot manually stopped")
-    return {"success": True}
+def read_root():
+    return {"message": "Luxury Bot API v3.0 Running"}
 
 @app.get("/bot/status")
-async def bot_status():
-    return get_status()
+def get_status():
+    return bot.get_stats()
+
+@app.post("/bot/start")
+async def start_bot():
+    # Fetch accounts from Supabase
+    response = supabase.table("accounts").select("*").execute()
+    accounts = response.data
+    started = await bot.start(accounts)
+    if not started:
+        raise HTTPException(status_code=400, detail="Bot already running")
+    return {"message": "Bot started"}
+
+@app.post("/bot/stop")
+async def stop_bot():
+    await bot.stop()
+    return {"message": "Bot stopped"}
 
 @app.get("/logs")
-async def logs():
-    return {"logs": get_logs()}
+def get_logs():
+    return bot.get_stats()["logs"]
 
 @app.get("/accounts")
-async def accounts():
-    return {"accounts": get_accounts()}
+def get_accounts():
+    response = supabase.table("accounts").select("*").execute()
+    return response.data
 
 @app.post("/accounts/add")
-async def accounts_add(body: dict):
-    email = body.get("email")
-    password = body.get("password")
-    if not email or not password:
-        return {"success": False, "error": "Email + password required"}
+def add_account(account: Account):
+    try:
+        data = supabase.table("accounts").insert({
+            "email": account.email, 
+            "password": account.password
+        }).execute()
+        return data.data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    add_account(email, password)
-    log(f"Added account: {email}")
-    return {"success": True, "accounts": get_accounts()}
-
-@app.delete("/accounts/{id}")
-async def accounts_delete(id: str):
-    delete_account(id)
-    log(f"Deleted account: {id}")
-    return {"success": True, "accounts": get_accounts()}
+@app.delete("/accounts/{uid}")
+def delete_account(uid: str):
+    supabase.table("accounts").delete().eq("id", uid).execute()
+    return {"message": "Deleted"}

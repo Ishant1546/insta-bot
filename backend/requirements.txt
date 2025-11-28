@@ -1,6 +1,6 @@
-
 fastapi
 uvicorn
 playwright
-python-dotenv
 supabase
+pydantic
+python-multipart
